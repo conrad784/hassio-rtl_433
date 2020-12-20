@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /
 
-ADD https://github.com/merbanan/rtl_433/blob/20.11/examples/rtl_433_mqtt_hass.py rtl_433_mqtt_hass.py
+ADD https://raw.githubusercontent.com/merbanan/rtl_433/20.11/examples/rtl_433_mqtt_hass.py rtl_433_mqtt_hass.py
 COPY startapp.sh startapp.sh
 
 ENTRYPOINT ["/startapp.sh"]

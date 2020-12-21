@@ -1,0 +1,37 @@
+FROM debian:stretch-slim
+
+MAINTAINER Conrad Sachweh
+
+WORKDIR /tmp
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    pkg-config \
+    libfftw3-dev \
+    librtlsdr-dev\
+    git \
+    ca-certificates \
+    libtool \
+    m4 \
+    automake \
+    rtl-sdr \
+    usbutils \
+    && rm -rf /var/lib/apt/lists/*
+
+
+RUN git clone https://github.com/viraptor/kalibrate-rtl.git && \
+    cd kalibrate-rtl && \
+    ./bootstrap && \
+    CXXFLAGS='-W -Wall -O3' ./configure && \
+    make && \
+    make install
+
+WORKDIR /
+
+ENTRYPOINT ["bash"]
+
+# get channels in GSM
+# kal -s 900
+# kal -c <channel>

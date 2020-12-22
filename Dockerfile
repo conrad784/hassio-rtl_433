@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     build-essential \
     cmake \
+    tini \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -40,4 +41,4 @@ ADD https://raw.githubusercontent.com/merbanan/rtl_433/$RTL_433_VERSION/examples
 
 COPY startapp.sh startapp.sh
 
-ENTRYPOINT ["/startapp.sh"]
+ENTRYPOINT ["tini", "--", "/startapp.sh"]

@@ -2,6 +2,8 @@ FROM debian:buster-slim
 
 MAINTAINER Conrad Sachweh
 
+ENV RTL_433_VERSION=20.11
+
 WORKDIR /tmp
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -20,19 +22,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN git clone https://github.com/merbanan/rtl_433.git && \
     cd rtl_433 && \
+    git checkout $RTL_433_VERSION && \
     mkdir build && \
     cd build && \
     cmake ../ && \
     make && \
-    make install && \
-    cd / && \
-    rm -rf /tmp/rtl_433
+    make install
 
-# now binary is in /tmp/rtl_433/build/src/rtl_433
+RUN apt-get purge -y cmake \
+    build-essential \
+    git \
+    doxygen
 
 WORKDIR /
 
-ADD https://raw.githubusercontent.com/merbanan/rtl_433/20.11/examples/rtl_433_mqtt_hass.py rtl_433_mqtt_hass.py
+ADD https://raw.githubusercontent.com/merbanan/rtl_433/$RTL_433_VERSION/examples/rtl_433_mqtt_hass.py rtl_433_mqtt_hass.py
+
 COPY startapp.sh startapp.sh
 
 ENTRYPOINT ["/startapp.sh"]

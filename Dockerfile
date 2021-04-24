@@ -1,44 +1,41 @@
-FROM debian:buster-slim
-
-MAINTAINER Conrad Sachweh
-
+FROM alpine:latest as base
 ENV RTL_433_VERSION=20.11
 
-WORKDIR /tmp
+FROM base as builder
 
-ARG DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache --virtual .buildDeps \
+    build-base \
+    libusb-dev \
     librtlsdr-dev \
-    doxygen \
-    python3-minimal \
-    python3-paho-mqtt \
-    git \
-    ca-certificates \
-    build-essential \
     cmake \
-    tini \
-    && rm -rf /var/lib/apt/lists/*
+    git
+
+WORKDIR /build
+RUN git clone https://github.com/merbanan/rtl_433
+WORKDIR ./rtl_433
+RUN git checkout ${RTL_433_VERSION}
+WORKDIR ./build
+
+RUN cmake ..
+RUN make -j
+WORKDIR /build/rtl_433/build
+RUN make DESTDIR=/build/root/ install
 
 
-RUN git clone https://github.com/merbanan/rtl_433.git && \
-    cd rtl_433 && \
-    git checkout $RTL_433_VERSION && \
-    mkdir build && \
-    cd build && \
-    cmake ../ && \
-    make && \
-    make install
+FROM base
 
-RUN apt-get purge -y cmake \
-    build-essential \
-    git \
-    doxygen
+RUN apk add --no-cache \
+    libusb \
+    librtlsdr \
+    py3-paho-mqtt
+COPY --from=builder /build/root/ /
 
 WORKDIR /
 
 ADD https://raw.githubusercontent.com/merbanan/rtl_433/$RTL_433_VERSION/examples/rtl_433_mqtt_hass.py rtl_433_mqtt_hass.py
 
 COPY startapp.sh startapp.sh
+
+MAINTAINER Conrad Sachweh
 
 ENTRYPOINT ["tini", "--", "/startapp.sh"]
